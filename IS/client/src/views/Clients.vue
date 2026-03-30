@@ -118,6 +118,7 @@ const filteredClients = computed(() => {
 
 const addClient = () => {
   router.push('/clients/new');
+  
 };
 
 const editClient = (id) => {
