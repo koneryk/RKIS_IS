@@ -1,0 +1,23 @@
+# Зависимости
+node_modules/
+
+# Логи ошибок
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Папки сборки (если есть)
+dist/
+build/
+
+# Файлы окружения с секретами
+.env
+.env.local
+
+# Игнорируем папку с результатами сборки
+client/dev-dist/
+dist/
+
+# Если вы хотите игнорировать только конкретные файлы из списка:
+# sw.js
+# workbox-*.js

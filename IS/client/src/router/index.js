@@ -10,6 +10,7 @@ import RiskAssessment from "../views/RiskAssessment.vue";
 import FinancialAnalysis from "../views/FinancialAnalysis.vue";
 import CollateralAssessment from "../views/CollateralAssessment.vue";
 import RiskDecision from "../views/RiskDecision.vue";
+import ClientsADD from "../views/ClientsADD.vue"
 
 const routes = [
     {
@@ -22,6 +23,12 @@ const routes = [
         path: '/',
         name: 'Dashboard',
         component: Dashboard,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/clients/new',
+        name: 'ClientsADD',
+        component: ClientsADD,
         meta: { requiresAuth: true }
     },
     {
