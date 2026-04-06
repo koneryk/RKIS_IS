@@ -1,3 +1,26 @@
+<script setup>
+import api from "../api.js"
+
+async function LoadApplications(){
+  const dataAPPLICARION = await api.get("/applications")
+  //console.log(dataAPPLICARION.data.length)
+}
+LoadApplications()
+
+async function LoadSubmittedAPP(){
+  let mass = []
+  const subapp = await api.get("/applications")
+  for (let i = 0; i < subapp.data.length; i++){
+    mass.push(subapp.data[i])
+  }
+  for (let num = 0; num < subapp.data.length; num++){
+    console.log(mass[0])   
+  }}
+LoadSubmittedAPP()
+
+
+</script>
+
 <template>
   <div class="dashboard">
     <h1>Панель управления</h1>

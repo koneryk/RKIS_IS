@@ -8,7 +8,7 @@ const api = axios.create({
 api.interceptors.request.use(
     config => {
         const token = localStorage.getItem('token');
-        console.log('🔍 Токен из localStorage:', token ? token.substring(0, 20) + '...' : 'НЕТ ТОКЕНА');
+        console.log('Токен из localStorage:', token ? token.substring(0, 20) + '...' : 'НЕТ ТОКЕНА');
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -17,8 +17,8 @@ api.interceptors.request.use(
             console.log('Токен отсутствует!');
         }
 
-        console.log('Запрос:', config.method.toUpperCase(), config.url);
-        console.log('Заголовки:', config.headers);
+        //console.log('Запрос:', config.method.toUpperCase(), config.url);
+        //console.log('Заголовки:', config.headers);
 
         return config;
     },
@@ -27,11 +27,11 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
     response => {
-        console.log('📥 Ответ:', response.status, response.data);
+        //console.log('Ответ:', response.status, response.data);
         return response;
     },
     error => {
-        console.error('шибка:', error.message);
+        console.error('Ошибка:', error.message);
         if (error.response) {
             console.log('Статус:', error.response.status);
             console.log('Данные:', error.response.data);
