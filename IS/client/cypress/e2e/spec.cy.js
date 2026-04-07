@@ -9,7 +9,7 @@ describe('CreditSys - Авторизация', () => {
       return false;
     });
   });
-s 
+ 
   it('должна корректно отображаться страница входа', () => {
     cy.contains('CreditSys').should('be.visible');
     cy.contains('Вход в систему').should('be.visible');
