@@ -2,7 +2,7 @@
   <div class="risk-assessment">
     <div class="header">
       <h1>Оценка рисков</h1>
-      <p class="idef0-badge">Этап A2 - Оценка рисков</p>
+      <p class="idef0-badge">Оценка рисков</p>
     </div>
 
     <div v-if="loading" class="loading">

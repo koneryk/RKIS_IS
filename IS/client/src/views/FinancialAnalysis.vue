@@ -2,7 +2,7 @@
   <div class="financial-analysis">
     <div class="header">
       <h2>Финансовый анализ</h2>
-      <p class="idef0-badge">Этап A21 - Финансовый анализ</p>
+      <p class="idef0-badge">Финансовый анализ</p>
     </div>
 
     <div v-if="loading" class="loading">

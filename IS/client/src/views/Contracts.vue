@@ -2,7 +2,7 @@
   <div class="contracts">
     <div class="header">
       <h1>Реестр договоров</h1>
-      <p class="idef0-badge">Этап A5 - Регистрация и выдача</p>
+      <p class="idef0-badge">Регистрация и выдача</p>
     </div>
 
     <div v-if="loading" class="loading">

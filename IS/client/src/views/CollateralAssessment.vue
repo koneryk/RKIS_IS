@@ -2,7 +2,7 @@
   <div class="collateral-assessment">
     <div class="header">
       <h2>Оценка залогового обеспечения</h2>
-      <p class="idef0-badge">Этап A22 - Оценка залога</p>
+      <p class="idef0-badge">Оценка залога</p>
     </div>
 
     <div v-if="loading" class="loading">

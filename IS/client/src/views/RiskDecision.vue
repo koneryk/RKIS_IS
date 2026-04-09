@@ -2,7 +2,7 @@
   <div class="risk-decision">
     <div class="header">
       <h2>Принятие решения по кредиту</h2>
-      <p class="idef0-badge">Этап A23 - Риск-решение</p>
+      <p class="idef0-badge">Риск-решение</p>
     </div>
 
     <div v-if="loading" class="loading">

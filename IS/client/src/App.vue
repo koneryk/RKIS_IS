@@ -44,8 +44,6 @@ body {
 .main-nav {
   display: flex;
   gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 1rem;
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
