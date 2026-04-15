@@ -97,13 +97,13 @@
           <td class="actions-cell">
             <div class="actions">
               <button class="btn-icon" @click="viewApplication(app.id)" title="Просмотр">
-                <i class="fas fa-eye"></i>
+                <i class="fas fa-eye">Просмотр</i>
               </button>
               <button class="btn-icon" @click="editApplication(app.id)" title="Редактировать">
-                <i class="fas fa-edit"></i>
+                <i class="fas fa-edit">Редактирование</i>
               </button>
               <button class="btn-icon" @click="deleteApplication(app.id)" title="Удалить">
-                <i class="fas fa-trash"></i>
+                <i class="fas fa-trash">Удалить</i>
               </button>
             </div>
           </td>
