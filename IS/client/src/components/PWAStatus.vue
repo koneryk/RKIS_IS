@@ -37,13 +37,9 @@ onMounted(() => {
 
 <template>
   <div class="pwa-status">
-    <div v-if="!isOnline" class="offline-banner">
-      ⚡ Вы работаете в офлайн-режиме
-    </div>
+    <div v-if="!isOnline" class="offline-banner">Вы работаете в офлайн-режиме</div>
 
-    <div v-if="offlineReady" class="offline-ready">
-      Приложение готово к работе без интернета
-    </div>
+    <div v-if="offlineReady" class="offline-ready">Приложение готово к работе без интернета</div>
 
     <div v-if="showUpdatePrompt || needRefresh" class="update-prompt">
       <div class="update-content">

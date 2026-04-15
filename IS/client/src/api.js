@@ -17,9 +17,6 @@ api.interceptors.request.use(
             console.log('Токен отсутствует!');
         }
 
-        //console.log('Запрос:', config.method.toUpperCase(), config.url);
-        //console.log('Заголовки:', config.headers);
-
         return config;
     },
     error => Promise.reject(error)
