@@ -1,5 +1,14 @@
 <template>
-  <div class="application-form">
+ 
+  <div class="application-form"> 
+    <button @click="showModal = true">Открыть окно</button>
+    <ModalWindow 
+      v-model:visible="showModal"
+      title="Подтверждение действия"
+      @confirm="handleConfirm"
+    >
+      <p>Вы уверены, что хотите выполнить это действие?</p>
+    </ModalWindow>
     <h1>{{ isEdit ? 'Редактирование заявки' : 'Новая заявка' }}</h1>
 
     <div v-if="loading" class="loading">
@@ -21,7 +30,7 @@
           </option>
         </select>
       </div>
-
+      
       <div class="form-group">
         <label>Продукт:</label>
         <select v-model="form.product_id" required :disabled="isEdit">
@@ -77,13 +86,16 @@
 </template>
 
 <script setup>
+
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../api';
+import ModalWindow from '../components/ModalWindow.vue';
+
 
 const route = useRoute();
 const router = useRouter();
-
+const showModal = ref(false)
 const clients = ref([]);
 const products = ref([]);
 const loading = ref(true);
@@ -91,7 +103,10 @@ const error = ref('');
 const submitting = ref(false);
 
 const isEdit = computed(() => !!route.params.id);
-
+const handleConfirm = () => {
+  console.log('Действие подтверждено')
+  // Ваша логика здесь
+}
 const form = ref({
   client_id: '',
   product_id: '',

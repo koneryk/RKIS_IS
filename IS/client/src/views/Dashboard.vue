@@ -47,13 +47,11 @@ LoadSubmittedAPP()
       </div>
     </div>
 
-    <div class="recent-applications">
-
-    </div>
   </div>
 </template>
 
 <style scoped>
+
 .dashboard {
   padding: 20px;
 }

@@ -84,6 +84,9 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
+        path: "/application/:"
+    },
+    {
         path: '/applications/:id/financial-analysis',
         name: 'FinancialAnalysis',
         component: FinancialAnalysis,
