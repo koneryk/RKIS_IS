@@ -1,6 +1,7 @@
 <script setup>
 import PWAStatus from '../src/components/PWAStatus.vue'
 import { RouterView } from 'vue-router'
+
 </script>
 
 <template>

@@ -12,6 +12,7 @@ import CollateralAssessment from "../views/CollateralAssessment.vue";
 import RiskDecision from "../views/RiskDecision.vue";
 import ClientsADD from "../views/ClientsADD.vue"
 
+ 
 const routes = [
     {
         path: '/login',
@@ -113,7 +114,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token');
-    if (to.meta.requiresAuth && !token) {
+    if ((to.meta.requiresAuth && !token)) {
         next('/login');
     } else if (to.meta.requiresGuest && token) {
         next('/');
