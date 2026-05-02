@@ -25,11 +25,11 @@
       <div class="filter-group">
         <select v-model="stageFilter" class="filter-select">
           <option value="">Все этапы</option>
-          <option value="A1">A1 - Принятие</option>
-          <option value="A2">A2 - Оценка рисков</option>
-          <option value="A3">A3 - Юр. проверка</option>
-          <option value="A4">A4 - Согласование</option>
-          <option value="A5">A5 - Регистрация</option>
+          <option value="A1">Принятие</option>
+          <option value="A2">Оценка рисков</option>
+          <option value="A3">Юр. проверка</option>
+          <option value="A4">Согласование</option>
+          <option value="A5">Регистрация</option>
         </select>
 
         <select v-model="statusFilter" class="filter-select">

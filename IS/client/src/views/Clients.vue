@@ -42,8 +42,8 @@
           <td>{{ client.address }}</td>
           <td>{{ client.phone }}</td>
           <td>
-            <button class="btn-icon" @click="editClient(client.id)">✏️</button>
-            <button class="btn-icon" @click="deleteClient(client.id)">🗑️</button>
+            <button class="btn-icon" @click="editClient(client.id)">Редактирование</button>
+            <button class="btn-icon" @click="deleteClient(client.id)">Удаление</button>
           </td>
         </tr>
         </tbody>

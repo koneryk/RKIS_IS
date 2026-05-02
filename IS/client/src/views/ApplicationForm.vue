@@ -64,14 +64,14 @@
       <div v-if="isEdit" class="form-group">
         <label>Этап:</label>
         <select v-model="form.current_stage">
-          <option value="A1">A1 - Принятие</option>
-          <option value="A2">A2 - Оценка рисков</option>
-          <option value="A21">A21 - Финанализ</option>
-          <option value="A22">A22 - Оценка залога</option>
-          <option value="A23">A23 - Риск-решение</option>
-          <option value="A3">A3 - Юр. проверка</option>
-          <option value="A4">A4 - Согласование</option>
-          <option value="A5">A5 - Регистрация</option>
+          <option value="A1">Принятие</option>
+          <option value="A2">Оценка рисков</option>
+          <option value="A21">Финанализ</option>
+          <option value="A22">Оценка залога</option>
+          <option value="A23">Риск-решение</option>
+          <option value="A3">Юр. проверка</option>
+          <option value="A4">Согласование</option>
+          <option value="A5">Регистрация</option>
         </select>
       </div>
 
@@ -105,7 +105,6 @@ const submitting = ref(false);
 const isEdit = computed(() => !!route.params.id);
 const handleConfirm = () => {
   console.log('Действие подтверждено')
-  // Ваша логика здесь
 }
 const form = ref({
   client_id: '',

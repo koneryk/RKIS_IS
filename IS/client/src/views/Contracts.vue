@@ -181,14 +181,12 @@ const loading = ref(true);
 const error = ref('');
 const contracts = ref([]);
 
-// Фильтры и сортировка
 const searchQuery = ref('');
 const statusFilter = ref('');
 const sortBy = ref('date_desc');
 const currentPage = ref(1);
 const itemsPerPage = 10;
 
-// Загрузка договоров
 const fetchContracts = async () => {
   try {
     loading.value = true;
@@ -205,11 +203,9 @@ const fetchContracts = async () => {
   }
 };
 
-// Фильтрация и сортировка
 const filteredContracts = computed(() => {
   let filtered = contracts.value;
 
-  // Поиск по номеру или клиенту
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(c =>
@@ -218,12 +214,10 @@ const filteredContracts = computed(() => {
     );
   }
 
-  // Фильтр по статусу
   if (statusFilter.value) {
     filtered = filtered.filter(c => c.status === statusFilter.value);
   }
 
-  // Сортировка
   filtered.sort((a, b) => {
     switch (sortBy.value) {
       case 'date_desc':
@@ -242,7 +236,6 @@ const filteredContracts = computed(() => {
   return filtered;
 });
 
-// Пагинация
 const paginatedContracts = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
   const end = start + itemsPerPage;
@@ -253,7 +246,6 @@ const totalPages = computed(() => {
   return Math.ceil(filteredContracts.value.length / itemsPerPage);
 });
 
-// Статистика
 const signedCount = computed(() => {
   return contracts.value.filter(c => c.status === 'signed' || c.status === 'active').length;
 });
@@ -266,7 +258,6 @@ const totalAmount = computed(() => {
   return contracts.value.reduce((sum, c) => sum + (c.amount || 0), 0);
 });
 
-// Вспомогательные функции
 const formatAmount = (amount) => {
   if (!amount && amount !== 0) return '—';
   return new Intl.NumberFormat('ru-RU', {
@@ -291,7 +282,6 @@ const getStatusText = (status) => {
   return statuses[status] || status;
 };
 
-// Действия
 const viewContract = (id) => {
   router.push(`/contracts/${id}`);
 };
@@ -302,14 +292,12 @@ const editContract = (id) => {
 
 const downloadContract = async (id) => {
   try {
-    // Здесь будет скачивание файла
     alert('Функция скачивания в разработке');
   } catch (err) {
     console.error('Ошибка скачивания:', err);
   }
 };
 
-// Загрузка при монтировании
 onMounted(() => {
   fetchContracts();
 });
