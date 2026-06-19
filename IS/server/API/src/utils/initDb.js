@@ -99,7 +99,7 @@ async function initializeDatabase() {
                 expenses DECIMAL(15,2),
                 debt DECIMAL(15,2),
                 assets DECIMAL(15,2),
-
+                comment TEXT,
                 collateral_type VARCHAR(50),
                 collateral_description TEXT,
                 collateral_value DECIMAL(15,2),
@@ -132,6 +132,7 @@ async function initializeDatabase() {
                 valuation_date DATE,
                 appraiser VARCHAR(255),
                 ltv_ratio DECIMAL(5,2),
+                comments TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
         `);

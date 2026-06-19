@@ -6,6 +6,7 @@ const productController = require('../controllers/productController');
 const clientController = require('../controllers/clientController');
 const contractController = require('../controllers/contractController');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 router.post('/auth/login', userController.login);
 router.post('/auth/register', userController.register);
@@ -55,6 +56,10 @@ router.get('/contracts/:id', contractController.getContractById);
 router.post('/applications/:id/contract', contractController.createContract);
 router.put('/contracts/:id', contractController.updateContract);
 router.delete('/contracts/:id', contractController.deleteContract);
+
+router.get('/applications/:id/documents', applicationController.getDocuments);
+router.delete('/documents/:id', applicationController.deleteDocument);
+router.post('/applications/:id/documents', upload.array('documents'), applicationController.uploadDocuments);
 
 router.get('/health', (req, res) => {
     res.json({ status: 'OK', time: new Date().toISOString() });

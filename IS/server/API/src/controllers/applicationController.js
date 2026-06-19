@@ -579,7 +579,11 @@ exports.deleteContract = async (req, res) => {
 
 exports.uploadDocument = async (req, res) => {
     const { id } = req.params;
-    const { document_type, file_name, file_path } = req.body;
+    const { document_type } = req.body;
+    
+    if (!req.file) {
+        return res.status(400).json({ error: 'Файл не загружен' });
+    }
 
     try {
         const result = await pool.query(
@@ -587,12 +591,41 @@ exports.uploadDocument = async (req, res) => {
              (application_id, document_type, file_name, file_path, uploaded_by)
              VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
-            [id, document_type, file_name, file_path, req.user?.id]
+            [id, document_type || 'collateral', req.file.originalname, req.file.path, req.user?.id]
         );
 
         res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error('Ошибка uploadDocument:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+exports.uploadDocuments = async (req, res) => {
+    const { id } = req.params;
+    const { document_type } = req.body;
+    
+    if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'Файлы не загружены' });
+    }
+
+    try {
+        const uploadedDocs = [];
+        
+        for (const file of req.files) {
+            const result = await pool.query(
+                `INSERT INTO documents 
+                 (application_id, document_type, file_name, file_path, uploaded_by)
+                 VALUES ($1, $2, $3, $4, $5)
+                 RETURNING *`,
+                [id, document_type || 'collateral', file.originalname, file.path, req.user?.id]
+            );
+            uploadedDocs.push(result.rows[0]);
+        }
+
+        res.status(201).json(uploadedDocs);
+    } catch (err) {
+        console.error('Ошибка uploadDocuments:', err);
         res.status(500).json({ error: err.message });
     }
 };
