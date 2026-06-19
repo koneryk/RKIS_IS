@@ -18,7 +18,9 @@ const routes = [
         path: '/login',
         name: 'Login',
         component: Login,
-        meta: { requiresGuest: true }
+        meta: { requiresGuest: true,
+            hideNavbar: true
+         }
     },
     {
         path: '/',
