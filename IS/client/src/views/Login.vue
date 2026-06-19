@@ -15,7 +15,7 @@
       <div class="auth-header">
         <div class="logo">
           <i class="fas fa-hand-holding-usd"></i>
-          <span>CreditSys</span>
+          <span>Кредитная система</span>
         </div>
         <h2>Вход в систему</h2>
         <p>Кредитная система для владельцев частных предприятий</p>
@@ -292,7 +292,6 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.85) 0%, rgba(118, 75, 162, 0.85) 100%);
   z-index: 1;
 }
 
@@ -465,8 +464,8 @@ onBeforeUnmount(() => {
 }
 
 .btn-login {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  background-color: rgb(94, 94, 244);
   border: none;
   padding: 1rem;
   border-radius: 10px;

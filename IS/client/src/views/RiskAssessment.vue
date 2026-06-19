@@ -23,10 +23,10 @@
         >
         <select v-model="stageFilter" class="filter-select">
           <option value="">Все этапы</option>
-          <option value="A2">A2 - Ожидает оценки</option>
-          <option value="A21">A21 - Финанализ</option>
-          <option value="A22">A22 - Оценка залога</option>
-          <option value="A23">A23 - Риск-решение</option>
+          <option value="A2">Ожидает оценки</option>
+          <option value="A21">Финанализ</option>
+          <option value="A22">Оценка залога</option>
+          <option value="A23">Риск-решение</option>
         </select>
       </div>
 
