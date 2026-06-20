@@ -41,7 +41,7 @@
         <div class="result-card">
           <h4>
             <i class="fas fa-chart-line"></i>
-            Финансовый анализ (A21)
+            Финансовый анализ
           </h4>
           <template v-if="hasFinancialAnalysis">
             <div class="result-item">
@@ -72,7 +72,7 @@
         <div class="result-card">
           <h4>
             <i class="fas fa-home"></i>
-            Оценка залога (A22)
+            Оценка залога
           </h4>
           <template v-if="hasCollateral">
             <div class="result-item">
