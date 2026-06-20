@@ -307,7 +307,7 @@ const calculateForecast = () => {
   const fundingNeed = (assets / revenue) * (forecastedRevenue - revenue) - 
                      (netProfit / revenue) * forecastedRevenue * 0.6;
 
-  // Исправленный FCF
+  // FCF
   const depreciation = assets * 0.05;
   const changeInWC = workingCapital * 0.1;
   const fcf = netProfit + depreciation - plannedInvestments - changeInWC;
@@ -315,31 +315,31 @@ const calculateForecast = () => {
   // Скоринг
   let score = 0;
   
-  // Альтман (макс 35)
+  // Альтман 
   if (altmanZScore >= 2.9) score += 35;
   else if (altmanZScore >= 1.23) score += 20;
   else score += 5;
 
-  // ROE (макс 25)
+  // ROE 
   if (roe >= 15) score += 25;
   else if (roe >= 10) score += 18;
   else if (roe >= 5) score += 10;
   else if (roe > 0) score += 5;
 
-  // Ликвидность (макс 15)
+  // Ликвидность 
   if (currentRatio >= 2) score += 15;
   else if (currentRatio >= 1.5) score += 10;
   else if (currentRatio >= 1) score += 5;
 
-  // Долговая нагрузка (макс 10)
+  // Долговая нагрузка 
   if (debtEquityRatio <= 1) score += 10;
   else if (debtEquityRatio <= 2) score += 5;
 
-  // Потребность в финансировании (макс 10)
+  // Потребность в финансировании 
   if (fundingNeed <= 0) score += 10;
   else if (fundingNeed < revenue * 0.3) score += 5;
 
-  // Кредитная история (макс 5)
+  // Кредитная история 
   const historyScores = { excellent: 5, good: 3, fair: 1, poor: 0 };
   score += historyScores[form.creditHistory] || 0;
 
@@ -412,8 +412,15 @@ const formatAmount = (amount) => {
 };
 
 const submitAnalysis = async () => {
+  if (!results.value) {
+    alert('Сначала рассчитайте прогноз!');
+    return;
+  }
+
   try {
-    await api.post(`/applications/${route.params.id}/financial-analysis`, {
+    console.log('📤 Отправка финансового анализа для заявки:', route.params.id);
+    
+    const payload = {
       financial_score: results.value.integralScore,
       altman_z_score: results.value.altmanZScore,
       bankruptcy_risk: results.value.bankruptcyRisk,
@@ -436,12 +443,37 @@ const submitAnalysis = async () => {
       planned_investments: form.plannedInvestments,
       industry_risk: form.industry,
       credit_history: form.creditHistory
-    });
+    };
 
-    router.push(`/applications/${route.params.id}/collateral`);
+    console.log('📦 Данные для отправки:', payload);
+
+    const response = await api.post(`/applications/${route.params.id}/financial-analysis`, payload);
+    
+    console.log('✅ Финансовый анализ сохранен:', response.data);
+    
+    try {
+      console.log('🔄 Переход на страницу оценки залога...');
+      await router.push(`/applications/${route.params.id}/collateral`);
+      console.log('✅ Переход выполнен успешно');
+    } catch (navError) {
+      console.error('Ошибка при переходе:', navError);
+      await router.push(`/applications/${route.params.id}`);
+    }
+
   } catch (err) {
-    console.error(err);
-    alert('Ошибка при сохранении');
+    console.error('Ошибка при сохранении:', err);
+    console.error('Ответ сервера:', err.response?.data);
+    
+    let errorMessage = 'Ошибка при сохранении финансового анализа';
+    if (err.response?.data?.error) {
+      errorMessage = err.response.data.error;
+    } else if (err.response?.data?.details) {
+      errorMessage = err.response.data.details;
+    } else if (err.message) {
+      errorMessage = err.message;
+    }
+    
+    alert(`${errorMessage}`);
   }
 };
 </script>

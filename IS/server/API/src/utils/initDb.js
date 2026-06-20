@@ -86,55 +86,76 @@ async function initializeDatabase() {
         console.log('✅ Таблица documents создана');
 
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS risk_assessments (
-                                                            id SERIAL PRIMARY KEY,
-                                                            application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
-                assessed_by INTEGER REFERENCES users(id),
-
-                financial_score INTEGER,
-                liquidity_ratio DECIMAL(10,2),
-                debt_ratio DECIMAL(10,2),
-                profit_margin DECIMAL(10,2),
-                revenue DECIMAL(15,2),
-                expenses DECIMAL(15,2),
-                debt DECIMAL(15,2),
-                assets DECIMAL(15,2),
-                comment TEXT,
-                collateral_type VARCHAR(50),
-                collateral_description TEXT,
-                collateral_value DECIMAL(15,2),
-                ltv_ratio DECIMAL(5,2),
-                business_plan_score INTEGER,
-
-                industry_risk VARCHAR(50),
-                final_decision VARCHAR(20),
-                approved_amount DECIMAL(15,2),
-                approved_rate DECIMAL(5,2),
-                approved_term INTEGER,
-                conditions JSONB,
-                decision_date TIMESTAMP,
-                comments TEXT,
-
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-        `);
+    CREATE TABLE IF NOT EXISTS risk_assessments (
+        id SERIAL PRIMARY KEY,
+        application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
+        assessed_by INTEGER REFERENCES users(id),
+        
+        -- Финансовые показатели
+        financial_score INTEGER,
+        altman_z_score DECIMAL(10,3),
+        bankruptcy_risk VARCHAR(100),
+        roe DECIMAL(10,2),
+        current_ratio DECIMAL(10,2),
+        debt_equity_ratio DECIMAL(10,2),
+        profit_margin DECIMAL(10,2),
+        external_funding_need DECIMAL(15,2),
+        fcf DECIMAL(15,2),
+        recommendation TEXT,
+        
+        -- Исходные данные для расчета
+        revenue DECIMAL(15,2),
+        expenses DECIMAL(15,2),
+        ebit DECIMAL(15,2),
+        retained_earnings DECIMAL(15,2),
+        debt DECIMAL(15,2),
+        assets DECIMAL(15,2),
+        working_capital DECIMAL(15,2),
+        equity DECIMAL(15,2),
+        revenue_growth DECIMAL(5,2),
+        planned_investments DECIMAL(15,2),
+        
+        -- Риски
+        industry_risk VARCHAR(50),
+        credit_history VARCHAR(50),
+        
+        -- Оценка залога (дублируется для связи с collateral)
+        collateral_type VARCHAR(50),
+        collateral_description TEXT,
+        collateral_value DECIMAL(15,2),
+        ltv_ratio DECIMAL(5,2),
+        business_plan_score INTEGER,
+        
+        -- Финальное решение
+        final_decision VARCHAR(20),
+        approved_amount DECIMAL(15,2),
+        approved_rate DECIMAL(5,2),
+        approved_term INTEGER,
+        conditions JSONB,
+        decision_date TIMESTAMP,
+        comments TEXT,
+        
+        -- Системные поля
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+`);
         console.log('✅ Таблица risk_assessments создана');
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS collateral (
-                                                      id SERIAL PRIMARY KEY,
-                                                      application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
-                type VARCHAR(50) NOT NULL,
-                description TEXT,
-                estimated_value DECIMAL(15,2),
-                market_value DECIMAL(15,2),
-                valuation_date DATE,
-                appraiser VARCHAR(255),
-                ltv_ratio DECIMAL(5,2),
-                comments TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
+    id SERIAL PRIMARY KEY,
+    application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,  -- ✅ Добавлено
+    type VARCHAR(50) NOT NULL,
+    description TEXT,
+    estimated_value DECIMAL(15,2),
+    market_value DECIMAL(15,2),
+    valuation_date DATE,
+    appraiser VARCHAR(255),
+    ltv_ratio DECIMAL(5,2),
+    comments TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
         `);
         console.log('✅ Таблица collateral создана');
 
@@ -180,23 +201,24 @@ async function initializeDatabase() {
         console.log('✅ Таблица approvals создана');
 
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS contracts (
-                id SERIAL PRIMARY KEY,
-                application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
-                contract_number VARCHAR(50) UNIQUE,
-                signed_date DATE,
-                effective_date DATE,
-                maturity_date DATE,
-                amount DECIMAL(15,2),
-                interest_rate DECIMAL(5,2),
-                term INTEGER,
-                payment_frequency VARCHAR(20),
-                conditions JSONB,
-                status VARCHAR(20) DEFAULT 'draft',
-                document_id INTEGER REFERENCES documents(id),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+CREATE TABLE IF NOT EXISTS contracts (
+    id SERIAL PRIMARY KEY,
+    application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
+    client_id INTEGER REFERENCES clients(id),
+    contract_number VARCHAR(50) UNIQUE,
+    signed_date DATE,
+    effective_date DATE,
+    maturity_date DATE,
+    amount DECIMAL(15,2),
+    interest_rate DECIMAL(5,2),
+    term INTEGER,
+    payment_frequency VARCHAR(20),
+    conditions JSONB,
+    status VARCHAR(20) DEFAULT 'draft',
+    document_id INTEGER REFERENCES documents(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
         `);
         console.log('✅ Таблица contracts создана');
 

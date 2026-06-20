@@ -1,5 +1,84 @@
 const pool = require('../config/db');
 
+async function createContractInternal(applicationId, approved_amount, approved_rate, approved_term) {
+    try {
+        console.log('СОЗДАНИЕ ДОГОВОРА ДЛЯ ЗАЯВКИ:', applicationId);
+        
+        const appResult = await pool.query(`
+            SELECT 
+                a.*,
+                c.id as client_id,
+                c.name as client_name,
+                cp.base_rate,
+                cp.name as product_name
+            FROM applications a
+            JOIN clients c ON a.client_id = c.id
+            JOIN credit_products cp ON a.product_id = cp.id
+            WHERE a.id = $1
+        `, [applicationId]);
+
+        if (appResult.rows.length === 0) {
+            throw new Error('Заявка не найдена');
+        }
+
+        const app = appResult.rows[0];
+        
+        const contractNumber = `ДОГ-${Date.now()}-${String(app.id).padStart(3, '0')}`;
+        
+        const today = new Date();
+        const signedDate = today.toISOString().split('T')[0];
+        const effectiveDate = new Date(today);
+        effectiveDate.setDate(effectiveDate.getDate() + 1);
+        const maturityDate = new Date(today);
+        const termMonths = approved_term || app.requested_term || 12;
+        maturityDate.setMonth(maturityDate.getMonth() + termMonths);
+
+        const finalAmount = approved_amount || app.requested_amount;
+        const finalRate = approved_rate || app.base_rate || 15;
+
+        await pool.query(`
+            ALTER TABLE contracts 
+            ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id)
+        `);
+
+        const result = await pool.query(`
+            INSERT INTO contracts (
+                application_id,
+                client_id,
+                contract_number,
+                signed_date,
+                effective_date,
+                maturity_date,
+                amount,
+                interest_rate,
+                term,
+                status,
+                created_at,
+                updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            RETURNING *
+        `, [
+            applicationId,
+            app.client_id,
+            contractNumber,
+            signedDate,
+            effectiveDate.toISOString().split('T')[0],
+            maturityDate.toISOString().split('T')[0],
+            finalAmount,
+            finalRate,
+            termMonths,
+            'draft'
+        ]);
+
+        console.log('✅ ДОГОВОР СОЗДАН:', result.rows[0].contract_number);
+        return result.rows[0];
+
+    } catch (err) {
+        console.error('Ошибка создания договора:', err);
+        throw err;
+    }
+}
+
 exports.getApplications = async (req, res) => {
     try {
         const result = await pool.query(`
@@ -60,7 +139,7 @@ exports.getApplicationById = async (req, res) => {
         });
 
     } catch (err) {
-        console.error('❌ Ошибка getApplicationById:', err);
+        console.error('Ошибка getApplicationById:', err);
         res.status(500).json({ error: err.message });
     }
 };
@@ -164,7 +243,6 @@ exports.updateApplicationStage = async (req, res) => {
     }
 };
 
-
 exports.getFinancialAnalysis = async (req, res) => {
     const { id } = req.params;
 
@@ -182,38 +260,151 @@ exports.getFinancialAnalysis = async (req, res) => {
 
 exports.saveFinancialAnalysis = async (req, res) => {
     const { id } = req.params;
-    const {
-        financial_score,
-        liquidity_ratio,
-        debt_ratio,
-        industry_risk,
-        profit_margin,
-        revenue,
-        expenses,
-        debt,
-        assets
-    } = req.body;
+    const data = req.body;
+
+    console.log('📥 Сохранение финансового анализа для заявки:', id);
 
     try {
-        const result = await pool.query(
-            `INSERT INTO risk_assessments 
-             (application_id, financial_score, liquidity_ratio, debt_ratio, industry_risk, 
-              profit_margin, revenue, expenses, debt, assets, assessed_by)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-             RETURNING *`,
-            [id, financial_score, liquidity_ratio, debt_ratio, industry_risk,
-                profit_margin, revenue, expenses, debt, assets, req.user?.id]
-        );
-
-        await pool.query(
-            `UPDATE applications SET current_stage = 'A22' WHERE id = $1`,
+        const existing = await pool.query(
+            'SELECT id FROM risk_assessments WHERE application_id = $1',
             [id]
         );
 
-        res.status(201).json(result.rows[0]);
+        let result;
+
+        if (existing.rows.length > 0) {
+            result = await pool.query(
+                `UPDATE risk_assessments SET
+                    financial_score = $1,
+                    altman_z_score = $2,
+                    bankruptcy_risk = $3,
+                    roe = $4,
+                    current_ratio = $5,
+                    debt_equity_ratio = $6,
+                    profit_margin = $7,
+                    external_funding_need = $8,
+                    fcf = $9,
+                    recommendation = $10,
+                    revenue = $11,
+                    expenses = $12,
+                    ebit = $13,
+                    retained_earnings = $14,
+                    debt = $15,
+                    assets = $16,
+                    working_capital = $17,
+                    equity = $18,
+                    revenue_growth = $19,
+                    planned_investments = $20,
+                    industry_risk = $21,
+                    credit_history = $22,
+                    assessed_by = $23,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE application_id = $24
+                RETURNING *`,
+                [
+                    data.financial_score || 0,
+                    data.altman_z_score || 0,
+                    data.bankruptcy_risk || 'Не определен',
+                    data.roe || 0,
+                    data.current_ratio || 0,
+                    data.debt_equity_ratio || 0,
+                    data.profit_margin || 0,
+                    data.external_funding_need || 0,
+                    data.fcf || 0,
+                    data.recommendation || 'Анализ проведен',
+                    data.revenue || 0,
+                    data.expenses || 0,
+                    data.ebit || 0,
+                    data.retained_earnings || 0,
+                    data.debt || 0,
+                    data.assets || 0,
+                    data.working_capital || 0,
+                    data.equity || 0,
+                    data.revenue_growth || 0,
+                    data.planned_investments || 0,
+                    data.industry_risk || 'Не указана',
+                    data.credit_history || 'good',
+                    req.user?.id,
+                    id
+                ]
+            );
+        } else {
+            result = await pool.query(
+                `INSERT INTO risk_assessments (
+                    application_id,
+                    financial_score,
+                    altman_z_score,
+                    bankruptcy_risk,
+                    roe,
+                    current_ratio,
+                    debt_equity_ratio,
+                    profit_margin,
+                    external_funding_need,
+                    fcf,
+                    recommendation,
+                    revenue,
+                    expenses,
+                    ebit,
+                    retained_earnings,
+                    debt,
+                    assets,
+                    working_capital,
+                    equity,
+                    revenue_growth,
+                    planned_investments,
+                    industry_risk,
+                    credit_history,
+                    assessed_by
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+                RETURNING *`,
+                [
+                    id,
+                    data.financial_score || 0,
+                    data.altman_z_score || 0,
+                    data.bankruptcy_risk || 'Не определен',
+                    data.roe || 0,
+                    data.current_ratio || 0,
+                    data.debt_equity_ratio || 0,
+                    data.profit_margin || 0,
+                    data.external_funding_need || 0,
+                    data.fcf || 0,
+                    data.recommendation || 'Анализ проведен',
+                    data.revenue || 0,
+                    data.expenses || 0,
+                    data.ebit || 0,
+                    data.retained_earnings || 0,
+                    data.debt || 0,
+                    data.assets || 0,
+                    data.working_capital || 0,
+                    data.equity || 0,
+                    data.revenue_growth || 0,
+                    data.planned_investments || 0,
+                    data.industry_risk || 'Не указана',
+                    data.credit_history || 'good',
+                    req.user?.id
+                ]
+            );
+        }
+
+        console.log('✅ Финансовый анализ сохранен');
+
+        await pool.query(
+            `UPDATE applications SET current_stage = 'A21', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+            [id]
+        );
+
+        res.status(201).json({
+            success: true,
+            data: result.rows[0],
+            message: 'Финансовый анализ успешно сохранен'
+        });
+
     } catch (err) {
         console.error('Ошибка saveFinancialAnalysis:', err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ 
+            error: 'Ошибка при сохранении финансового анализа',
+            details: err.message 
+        });
     }
 };
 
@@ -246,19 +437,17 @@ exports.saveCollateral = async (req, res) => {
     } = req.body;
 
     console.log('📥 Сохранение залога для заявки:', id);
-    console.log('Данные:', { type, description, estimated_value, market_value, valuation_date, appraiser, ltv_ratio });
 
     try {
         const result = await pool.query(
             `INSERT INTO collateral
              (application_id, type, description, estimated_value, market_value, valuation_date, appraiser, ltv_ratio, comments)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                 RETURNING *`,
+             RETURNING *`,
             [id, type, description, estimated_value, market_value, valuation_date, appraiser, ltv_ratio, comments]
         );
 
         console.log('Залог сохранен, ID:', result.rows[0].id);
-
 
         await pool.query(
             `UPDATE applications SET current_stage = 'A23' WHERE id = $1`,
@@ -267,7 +456,7 @@ exports.saveCollateral = async (req, res) => {
 
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error('❌ Ошибка saveCollateral:', err);
+        console.error('Ошибка saveCollateral:', err);
         res.status(500).json({ error: err.message });
     }
 };
@@ -291,12 +480,15 @@ exports.saveRiskDecision = async (req, res) => {
     const { id } = req.params;
     const {
         final_decision,
-        comment,
+        comments,
         conditions,
         approved_amount,
         approved_rate,
         approved_term
     } = req.body;
+
+    console.log('📥 Сохранение риск-решения для заявки:', id);
+    console.log('Решение:', final_decision);
 
     try {
         const existing = await pool.query(
@@ -309,7 +501,7 @@ exports.saveRiskDecision = async (req, res) => {
             result = await pool.query(
                 `UPDATE risk_assessments 
                  SET final_decision = $1, 
-                     comment = $2, 
+                     comments = $2, 
                      conditions = $3,
                      approved_amount = $4, 
                      approved_rate = $5, 
@@ -318,16 +510,16 @@ exports.saveRiskDecision = async (req, res) => {
                      updated_at = CURRENT_TIMESTAMP
                  WHERE application_id = $7
                  RETURNING *`,
-                [final_decision, comment, conditions, approved_amount, approved_rate, approved_term, id]
+                [final_decision, comments || '', conditions || {}, approved_amount, approved_rate, approved_term, id]
             );
         } else {
             result = await pool.query(
                 `INSERT INTO risk_assessments 
-                 (application_id, final_decision, comment, conditions, 
+                 (application_id, final_decision, comments, conditions, 
                   approved_amount, approved_rate, approved_term, decision_date)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
                  RETURNING *`,
-                [id, final_decision, comment, conditions, approved_amount, approved_rate, approved_term]
+                [id, final_decision, comments || '', conditions || {}, approved_amount, approved_rate, approved_term]
             );
         }
 
@@ -338,19 +530,46 @@ exports.saveRiskDecision = async (req, res) => {
             nextStage = 'rejected';
             status = 'rejected';
         } else if (final_decision === 'conditional') {
-            nextStage = 'A2_conditional';
-            status = 'conditional';
+            nextStage = 'A23';
+            status = 'submitted';
+        } else if (final_decision === 'approved') {
+            nextStage = 'A5';
+            status = 'approved';
+            
+            console.log('🏦 ЗАЯВКА ОДОБРЕНА! Создаем договор...');
+            try {
+                const contract = await createContractInternal(id, approved_amount, approved_rate, approved_term);
+                console.log('✅ ДОГОВОР УСПЕШНО СОЗДАН:', contract.contract_number);
+            } catch (contractErr) {
+                console.error('ОШИБКА СОЗДАНИЯ ДОГОВОРА:', contractErr);
+            }
         }
 
         await pool.query(
-            `UPDATE applications SET status = $1, current_stage = $2 WHERE id = $3`,
+            `UPDATE applications SET status = $1, current_stage = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3`,
             [status, nextStage, id]
         );
 
-        res.json(result.rows[0]);
+        await pool.query(
+            `INSERT INTO stage_history (application_id, stage, decision, comments) 
+             VALUES ($1, $2, $3, $4)`,
+            [id, nextStage, final_decision, comments || '']
+        );
+
+        console.log('✅ Риск-решение сохранено');
+
+        res.json({
+            success: true,
+            data: result.rows[0],
+            message: `Решение "${final_decision}" успешно сохранено`
+        });
+
     } catch (err) {
         console.error('Ошибка saveRiskDecision:', err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ 
+            error: 'Ошибка при сохранении риск-решения',
+            details: err.message 
+        });
     }
 };
 
@@ -411,15 +630,15 @@ exports.getApprovals = async (req, res) => {
 
 exports.saveApproval = async (req, res) => {
     const { id } = req.params;
-    const { decision, comment, approver_name, approver_role } = req.body;
+    const { decision, comments, approver_name, approver_role } = req.body;
 
     try {
         const result = await pool.query(
             `INSERT INTO approvals 
-             (application_id, decision, comment, approver_name, approver_role, approved_by)
+             (application_id, decision, comments, approver_name, approver_role, approved_by)
              VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING *`,
-            [id, decision, comment, approver_name, approver_role, req.user?.id]
+            [id, decision, comments, approver_name, approver_role, req.user?.id]
         );
 
         const approvalsCount = await pool.query(
