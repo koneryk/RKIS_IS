@@ -70,7 +70,7 @@ async function createContractInternal(applicationId, approved_amount, approved_r
             'draft'
         ]);
 
-        console.log('✅ ДОГОВОР СОЗДАН:', result.rows[0].contract_number);
+        console.log('ДОГОВОР СОЗДАН:', result.rows[0].contract_number);
         return result.rows[0];
 
     } catch (err) {
@@ -386,7 +386,7 @@ exports.saveFinancialAnalysis = async (req, res) => {
             );
         }
 
-        console.log('✅ Финансовый анализ сохранен');
+        console.log('Финансовый анализ сохранен');
 
         await pool.query(
             `UPDATE applications SET current_stage = 'A21', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
@@ -539,7 +539,7 @@ exports.saveRiskDecision = async (req, res) => {
             console.log('🏦 ЗАЯВКА ОДОБРЕНА! Создаем договор...');
             try {
                 const contract = await createContractInternal(id, approved_amount, approved_rate, approved_term);
-                console.log('✅ ДОГОВОР УСПЕШНО СОЗДАН:', contract.contract_number);
+                console.log('ДОГОВОР УСПЕШНО СОЗДАН:', contract.contract_number);
             } catch (contractErr) {
                 console.error('ОШИБКА СОЗДАНИЯ ДОГОВОРА:', contractErr);
             }
@@ -556,7 +556,7 @@ exports.saveRiskDecision = async (req, res) => {
             [id, nextStage, final_decision, comments || '']
         );
 
-        console.log('✅ Риск-решение сохранено');
+        console.log('Риск-решение сохранено');
 
         res.json({
             success: true,

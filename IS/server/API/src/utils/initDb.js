@@ -17,7 +17,7 @@ async function initializeDatabase() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
         `);
-        console.log('✅ Таблица users создана');
+        console.log('Таблица users создана');
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS credit_products (
@@ -36,7 +36,7 @@ async function initializeDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
         `);
-        console.log('✅ Таблица credit_products создана');
+        console.log('Таблица credit_products создана');
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS clients (
@@ -52,7 +52,7 @@ async function initializeDatabase() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
         `);
-        console.log('✅ Таблица clients создана');
+        console.log('Таблица clients создана');
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS applications (
@@ -68,7 +68,7 @@ async function initializeDatabase() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
         `);
-        console.log('✅ Таблица applications создана');
+        console.log('Таблица applications создана');
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS documents (
@@ -83,7 +83,7 @@ async function initializeDatabase() {
                 uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
         `);
-        console.log('✅ Таблица documents создана');
+        console.log('Таблица documents создана');
 
         await pool.query(`
     CREATE TABLE IF NOT EXISTS risk_assessments (
@@ -140,12 +140,12 @@ async function initializeDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 `);
-        console.log('✅ Таблица risk_assessments создана');
+        console.log('Таблица risk_assessments создана');
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS collateral (
     id SERIAL PRIMARY KEY,
-    application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,  -- ✅ Добавлено
+    application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,  -- Добавлено
     type VARCHAR(50) NOT NULL,
     description TEXT,
     estimated_value DECIMAL(15,2),
@@ -157,7 +157,7 @@ async function initializeDatabase() {
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
         `);
-        console.log('✅ Таблица collateral создана');
+        console.log('Таблица collateral создана');
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS stage_history (
@@ -170,7 +170,7 @@ async function initializeDatabase() {
                 entered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
         `);
-        console.log('✅ Таблица stage_history создана');
+        console.log('Таблица stage_history создана');
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS legal_checks (
@@ -184,7 +184,7 @@ async function initializeDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
         `);
-        console.log('✅ Таблица legal_checks создана');
+        console.log('Таблица legal_checks создана');
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS approvals (
@@ -198,7 +198,7 @@ async function initializeDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
         `);
-        console.log('✅ Таблица approvals создана');
+        console.log('Таблица approvals создана');
 
         await pool.query(`
 CREATE TABLE IF NOT EXISTS contracts (
@@ -220,7 +220,7 @@ CREATE TABLE IF NOT EXISTS contracts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
         `);
-        console.log('✅ Таблица contracts создана');
+        console.log('Таблица contracts создана');
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS payments (
@@ -235,7 +235,7 @@ CREATE TABLE IF NOT EXISTS contracts (
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log('✅ Таблица payments создана');
+        console.log('Таблица payments создана');
 
         await addTestData(pool);
 
@@ -264,7 +264,7 @@ async function addTestData(pool) {
                 'Мария Сидорова', 'security@example.com', hashedPassword, 'security', 'ОЭБ (M2)'
             ]
         );
-        console.log('✅ Тестовые пользователи созданы');
+        console.log('Тестовые пользователи созданы');
     }
 
     const productsCheck = await pool.query('SELECT * FROM credit_products');
@@ -276,7 +276,7 @@ async function addTestData(pool) {
                                                                                                                                                                            ('BUS-DEV', 'Бизнес-Развитие', 'Для действующего бизнеса', 1000000, 5000000, 13.0, 24, 60, true, true),
                                                                                                                                                                            ('BUS-INVEST', 'Бизнес-Инвест', 'Крупные инвестиционные проекты', 5000000, 50000000, 11.5, 36, 120, true, true)`
         );
-        console.log('✅ Тестовые кредитные продукты созданы');
+        console.log('Тестовые кредитные продукты созданы');
     }
 
     const clientCheck = await pool.query('SELECT * FROM clients');
@@ -287,7 +287,7 @@ async function addTestData(pool) {
                                                                               ('ООО "Ромашка"', '7701234567', '1027701234567', 'Москва, ул. Ленина, 1', '+7(495)123-45-67', 'info@romashka.ru'),
                                                                               ('ИП Иванов И.И.', '770123456789', '310770123456789', 'Москва, ул. Пушкина, 10', '+7(903)123-45-67', 'ivanov@mail.ru')`
         );
-        console.log('✅ Тестовые клиенты созданы');
+        console.log('Тестовые клиенты созданы');
     }
 }
 

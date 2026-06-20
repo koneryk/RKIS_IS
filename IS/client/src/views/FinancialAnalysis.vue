@@ -203,6 +203,83 @@
             </div>
           </div>
 
+          <!-- ====== МАТРИЦА РИСКОВ ====== -->
+          <div class="risk-matrix-section">
+            <h4>Двумерная матрица рисков</h4>
+            <p class="matrix-description">
+              Оценка риска по двум осям: <strong>Вероятность</strong> (0-4) и <strong>Влияние</strong> (0-4)
+            </p>
+
+            <div class="matrix-wrapper">
+              <div class="matrix-labels">
+                <div class="label-y">Влияние ↑</div>
+                <div class="label-x">Вероятность →</div>
+              </div>
+
+              <table class="risk-matrix">
+                <tr v-for="row in 5" :key="'row-' + row">
+                  <td v-for="col in 5" :key="'col-' + col"
+                      :class="getMatrixCellClass(row, col)"
+                      class="matrix-cell">
+                    <span class="cell-value">{{ (row - 1) * (col - 1) }}</span>
+                    <span v-if="isActiveCell(row, col)" class="cell-marker">●</span>
+                  </td>
+                </tr>
+              </table>
+
+              <div class="matrix-legend">
+                <div class="legend-item">
+                  <span class="color-box green"></span>
+                  <span>Низкий риск (0-4)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="color-box yellow"></span>
+                  <span>Средний риск (5-9)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="color-box red"></span>
+                  <span>Высокий риск (10-16)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="color-box active"></span>
+                  <span>Текущая позиция</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="matrix-result" :class="results.riskMatrix.color">
+              <div class="result-header">
+                <span class="result-icon">
+                  <i v-if="results.riskMatrix.color === 'green'" class="fas fa-check-circle"></i>
+                  <i v-else-if="results.riskMatrix.color === 'yellow'" class="fas fa-exclamation-triangle"></i>
+                  <i v-else class="fas fa-times-circle"></i>
+                </span>
+                <span class="result-category">{{ results.riskMatrix.category }}</span>
+                <span class="result-score">{{ results.riskMatrix.riskLevel }} из 16</span>
+              </div>
+              <div class="result-details">
+                <div class="detail-item">
+                  <span class="detail-label">Вероятность:</span>
+                  <span class="detail-value">{{ results.riskMatrix.probability }}/4</span>
+                  <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: (results.riskMatrix.probability / 4 * 100) + '%' }"></div>
+                  </div>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Влияние:</span>
+                  <span class="detail-value">{{ results.riskMatrix.impact }}/4</span>
+                  <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: (results.riskMatrix.impact / 4 * 100) + '%' }"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="result-recommendation">
+                <i class="fas fa-lightbulb"></i>
+                <span>{{ results.riskMatrix.recommendation }}</span>
+              </div>
+            </div>
+          </div>
+
           <div class="recommendation" :class="getRecommendationClass(results.recommendation)">
             <i class="fas fa-lightbulb"></i>
             <span>{{ results.recommendation }}</span>
@@ -258,7 +335,80 @@ onMounted(async () => {
     loading.value = false;
   }
 });
- 
+
+const calculateRiskMatrix = (altmanZScore, currentRatio, debtEquityRatio, profitMargin, revenue, debt) => {
+  // 1. ОЦЕНКА ВЕРОЯТНОСТИ (0-4)
+  let probability = 0;
+  
+  // Факторы, увеличивающие вероятность дефолта
+  if (altmanZScore < 1.23) probability += 2;
+  else if (altmanZScore < 2.9) probability += 1;
+  
+  if (currentRatio < 1) probability += 1;
+  else if (currentRatio < 1.5) probability += 0.5;
+  
+  if (debtEquityRatio > 2) probability += 1;
+  else if (debtEquityRatio > 1) probability += 0.5;
+  
+  // Ограничиваем максимум 4
+  probability = Math.min(Math.round(probability), 4);
+  
+  // 2. ОЦЕНКА ВЛИЯНИЯ (0-4)
+  let impact = 0;
+  
+  const requestedAmount = Number(application.value?.requested_amount) || 0;
+  const debtToRevenue = revenue > 0 ? debt / revenue : 0;
+  
+  // Размер кредита относительно выручки
+  if (requestedAmount > revenue * 0.5) impact += 2;
+  else if (requestedAmount > revenue * 0.3) impact += 1;
+  
+  // Долговая нагрузка
+  if (debtToRevenue > 0.5) impact += 1;
+  else if (debtToRevenue > 0.3) impact += 0.5;
+  
+  // Низкая прибыльность
+  if (profitMargin < 5) impact += 1;
+  else if (profitMargin < 10) impact += 0.5;
+  
+  // Ограничиваем максимум 4
+  impact = Math.min(Math.round(impact), 4);
+  
+  // 3. РАСЧЕТ УРОВНЯ РИСКА
+  const riskLevel = probability * impact;
+  
+  // 4. ОПРЕДЕЛЕНИЕ КАТЕГОРИИ
+  let category = '';
+  let color = '';
+  let recommendation = '';
+  
+  if (riskLevel <= 4) {
+    category = 'Низкий риск';
+    color = 'green';
+    recommendation = 'Рекомендуется одобрение. Финансовое положение стабильное.';
+  } else if (riskLevel <= 9) {
+    category = 'Средний риск';
+    color = 'yellow';
+    recommendation = 'Требуется дополнительный анализ. Есть риски, но потенциал для развития.';
+  } else {
+    category = 'Высокий риск';
+    color = 'red';
+    recommendation = 'Рекомендуется отказ. Высокие финансовые риски.';
+  }
+  
+  return {
+    probability,
+    impact,
+    riskLevel,
+    category,
+    color,
+    recommendation,
+    // Для позиционирования в матрице (1-5, так как в матрице 5x5)
+    matrixRow: impact + 1,
+    matrixCol: probability + 1
+  };
+};
+
 const calculateForecast = () => {
   const revenue = Number(form.revenue) || 0;
   const expenses = Number(form.expenses) || 0;
@@ -353,6 +503,15 @@ const calculateForecast = () => {
     recommendation = 'Рекомендуется отказ. Высокие финансовые риски, нестабильное положение.';
   }
 
+  const riskMatrix = calculateRiskMatrix(
+    altmanZScore, 
+    currentRatio, 
+    debtEquityRatio, 
+    profitMargin, 
+    revenue, 
+    debt
+  );
+
   results.value = {
     integralScore: Math.min(Math.round(score), 100),
     altmanZScore,
@@ -366,7 +525,8 @@ const calculateForecast = () => {
     profitMargin,
     externalFundingNeed: fundingNeed,
     fcf,
-    recommendation
+    recommendation,
+    riskMatrix 
   };
 };
 
@@ -406,6 +566,28 @@ const getRecommendationClass = (recommendation) => {
   return 'negative';
 };
 
+const getMatrixCellClass = (row, col) => {
+  const value = (row - 1) * (col - 1);
+  
+  let colorClass = '';
+  if (value <= 4) colorClass = 'cell-green';
+  else if (value <= 9) colorClass = 'cell-yellow';
+  else colorClass = 'cell-red';
+  
+  const isActive = isActiveCell(row, col);
+  
+  return {
+    [colorClass]: true,
+    'cell-active': isActive
+  };
+};
+
+const isActiveCell = (row, col) => {
+  if (!results.value?.riskMatrix) return false;
+  const { matrixRow, matrixCol } = results.value.riskMatrix;
+  return row === matrixRow && col === matrixCol;
+};
+
 const formatAmount = (amount) => {
   if (amount === null || amount === undefined) return '0 ₽';
   return new Intl.NumberFormat('ru-RU').format(Math.round(amount)) + ' ₽';
@@ -431,6 +613,11 @@ const submitAnalysis = async () => {
       external_funding_need: results.value.externalFundingNeed,
       fcf: results.value.fcf,
       recommendation: results.value.recommendation,
+      risk_probability: results.value.riskMatrix.probability,
+      risk_impact: results.value.riskMatrix.impact,
+      risk_level: results.value.riskMatrix.riskLevel,
+      risk_category: results.value.riskMatrix.category,
+      risk_recommendation: results.value.riskMatrix.recommendation,
       revenue: form.revenue,
       expenses: form.expenses,
       ebit: form.ebit,
@@ -449,12 +636,12 @@ const submitAnalysis = async () => {
 
     const response = await api.post(`/applications/${route.params.id}/financial-analysis`, payload);
     
-    console.log('✅ Финансовый анализ сохранен:', response.data);
+    console.log('Финансовый анализ сохранен:', response.data);
     
     try {
-      console.log('🔄 Переход на страницу оценки залога...');
+      console.log('Переход на страницу оценки залога...');
       await router.push(`/applications/${route.params.id}/collateral`);
-      console.log('✅ Переход выполнен успешно');
+      console.log('Переход выполнен успешно');
     } catch (navError) {
       console.error('Ошибка при переходе:', navError);
       await router.push(`/applications/${route.params.id}`);
@@ -619,6 +806,243 @@ const submitAnalysis = async () => {
 .warning { color: #92400e; }
 .negative { color: #991b1b; }
 
+.risk-matrix-section {
+  margin-top: 25px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.risk-matrix-section h4 {
+  margin: 0 0 5px 0;
+  color: #1f2937;
+}
+
+.matrix-description {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+.matrix-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.matrix-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 350px;
+  margin-bottom: 5px;
+}
+
+.label-y {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.label-x {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.risk-matrix {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 350px;
+  table-layout: fixed;
+}
+
+.matrix-cell {
+  width: 60px;
+  height: 60px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+  font-weight: bold;
+  font-size: 16px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.matrix-cell .cell-value {
+  display: block;
+  font-size: 18px;
+}
+
+.matrix-cell .cell-marker {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 16px;
+  color: #4f46e5;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+.cell-green {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.cell-yellow {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.cell-red {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.cell-active {
+  border: 3px solid #4f46e5;
+  box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+  transform: scale(1.05);
+  z-index: 10;
+  position: relative;
+}
+
+.matrix-legend {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.color-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.color-box.green { background-color: #d1fae5; }
+.color-box.yellow { background-color: #fef3c7; }
+.color-box.red { background-color: #fee2e2; }
+.color-box.active {
+  background-color: white;
+  border: 2px solid #4f46e5;
+  box-shadow: 0 0 8px rgba(79, 70, 229, 0.3);
+}
+
+.matrix-result {
+  margin-top: 15px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 350px;
+}
+
+.matrix-result.green {
+  background: #d1fae5;
+  border: 2px solid #065f46;
+}
+
+.matrix-result.yellow {
+  background: #fef3c7;
+  border: 2px solid #92400e;
+}
+
+.matrix-result.red {
+  background: #fee2e2;
+  border: 2px solid #991b1b;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.result-icon {
+  font-size: 1.3rem;
+}
+
+.matrix-result.green .result-icon { color: #065f46; }
+.matrix-result.yellow .result-icon { color: #92400e; }
+.matrix-result.red .result-icon { color: #991b1b; }
+
+.result-category {
+  flex: 1;
+}
+
+.result-score {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.result-details {
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.detail-label {
+  font-size: 0.9rem;
+  min-width: 80px;
+}
+
+.detail-value {
+  font-weight: 600;
+  min-width: 40px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.matrix-result.green .progress-fill { background: #065f46; }
+.matrix-result.yellow .progress-fill { background: #92400e; }
+.matrix-result.red .progress-fill { background: #991b1b; }
+
+.result-recommendation {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
 .recommendation {
   margin-top: 20px;
   padding: 15px;
@@ -695,6 +1119,28 @@ const submitAnalysis = async () => {
   
   .info-grid {
     grid-template-columns: 1fr;
+  }
+
+  .matrix-cell {
+    width: 45px;
+    height: 45px;
+    font-size: 14px;
+  }
+
+  .matrix-cell .cell-value {
+    font-size: 14px;
+  }
+
+  .risk-matrix {
+    max-width: 250px;
+  }
+
+  .matrix-result {
+    max-width: 100%;
+  }
+
+  .matrix-legend {
+    gap: 10px;
   }
 }
 </style>
